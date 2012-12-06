@@ -114,13 +114,10 @@ $(document).ready(function () {
     };
 
     function buildColumnTypes(){
-        var result = [];
-        for( var index in header_type_list){
-            var value = header_type_list[index];
-            var column = gettext($($.sprintf("#data_analysis thead tr th:nth-child(%d)", parseInt(index)+1)).html().replace(/(&nbsp;)/g,'').trim());
-            result[result.length] = (value && column == gettext("Submission Date"))  ? { "sType":  value} : {"sType": "string"};
-        }
-        return result;
+        return $(header_type_list).map(function(index, value){
+            var column_name = header_name_list[index];
+            return (value && column_name == gettext("Submission Date"))  ? { "sType":  value} : {"sType": "string"};
+        });
     };
 
     function showDatePicker($input) {
