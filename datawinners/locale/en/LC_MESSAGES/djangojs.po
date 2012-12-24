@@ -272,6 +272,10 @@ msgstr ""
 msgid "This data has already been deleted"
 msgstr ""
 
+msgid "Are you sure you want to delete the selected record/s?"
+msgstr ""
+
+
 msgid "Add A Subject"
 msgstr ""
 
@@ -554,7 +558,4 @@ msgid "You don't have any submissions for this question yet"
 msgstr ""
 
 msgid "Submission Date"
-msgstr ""
-
-msgid "Your Submission(s) will be deleted"
 msgstr ""

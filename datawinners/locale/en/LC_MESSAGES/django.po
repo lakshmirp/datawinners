@@ -519,7 +519,7 @@ msgstr ""
 
 msgid "q_tooltip_submission_date"
 msgstr ""
-"The Submission Date is the date you received the Submission from your Data Sender."
+"The Date Stamp is the date you received the Submission from your Data Sender."
 "</br></br>"
 "The Submission Date is often different than the Reporting Period. Example: Your Data Sender sends his report for May 2012 (Reporting Period) on 10 June 2012 (Submission Date)."
 
@@ -3937,10 +3937,4 @@ msgid "No action needed. We will display the updated version of the Registration
 msgstr ""
 
 msgid "OK, Got it"
-msgstr ""
-
-msgid "Your Submission(s) will be moved to Deleted Submissions.<br/>This action cannot be undone."
-msgstr ""
-
-msgid "Are you sure you want to continue?"
 msgstr ""
