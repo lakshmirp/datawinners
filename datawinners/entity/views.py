@@ -38,6 +38,7 @@ from mangrove.form_model.form_model import LOCATION_TYPE_FIELD_NAME, REGISTRATIO
 from mangrove.transport.player.player import WebPlayer
 from mangrove.transport import Request, TransportInfo
 from datawinners.entity import import_data as import_module
+from mangrove.utils.entity_builder import EntityBuilder
 from mangrove.utils.types import is_empty
 from datawinners.project.web_questionnaire_form_creator import WebQuestionnaireFormCreator
 from datawinners.submission.location import LocationBridge
@@ -55,6 +56,7 @@ from datawinners.common.constant import REGISTERED_DATA_SENDER, EDITED_DATA_SEND
     ADDED_DATA_SENDERS_TO_PROJECTS, REGISTERED_SUBJECT, EDITED_REGISTRATION_FORM
 from datawinners.entity.helper import send_email_to_data_sender
 import logging
+from datawinners.tests.test_data_utils import define_entity_instance
 
 websubmission_logger = logging.getLogger("websubmission")
 
@@ -234,6 +236,13 @@ def create_student_type(manager):
     entity_name = [u'student']
     define_type(manager, entity_name)
     create_registration_form(manager, entity_name)
+
+def register_student_subject(manager, location, short_code, geometry, lastname=None, mobile_number=None,
+                             description=None, firstname=None):
+    entity_type = [u'student']
+    student_subject = define_entity_instance(manager, entity_type, location, short_code, geometry, lastname, mobile_number,
+        description, firstname)
+    student_subject.save()
 
 
 @csrf_view_exempt

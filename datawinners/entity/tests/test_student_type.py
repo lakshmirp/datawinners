@@ -1,5 +1,5 @@
 from datawinners.entity.import_data import load_all_subjects
-from datawinners.entity.views import create_student_type
+from datawinners.entity.views import create_student_type, register_student_subject
 from mangrove.bootstrap import initializer
 from mangrove.utils.test_utils.mangrove_test_case import MangroveTestCase
 
@@ -15,3 +15,13 @@ class TestStudentType(MangroveTestCase):
         create_student_type(self.manager)
         subjects = load_all_subjects(self.manager)
         self.assertEquals('stu', subjects[0]['code'])
+
+    def test_should_register_a_student_subject(self):
+        create_student_type(self.manager)
+        register_student_subject(self.manager,['DGPetrolBunk','bangalore','karnataka'], short_code="RP007",
+            geometry={"type": "Point", "coordinates": [17.2833, 77.35]},
+            lastname="RP", firstname="Lakshmi", description="This RP's petrol bunk!!.", mobile_number="9900099000")
+        subjects = load_all_subjects(self.manager)
+        short_code = subjects[0]['data'][0]['short_code']
+        self.assertEquals('RP007',short_code)
+
