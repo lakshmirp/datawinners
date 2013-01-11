@@ -230,6 +230,12 @@ def create_type(request):
     return HttpResponse(json.dumps({'success': success, 'message': _(message)}))
 
 
+def create_student_type(manager):
+    entity_name = [u'student']
+    define_type(manager, entity_name)
+    create_registration_form(manager, entity_name)
+
+
 @csrf_view_exempt
 @csrf_response_exempt
 @login_required(login_url='/login')
