@@ -1,7 +1,7 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 from django.conf.urls.defaults import patterns
-from datawinners.entity.views import create_data_sender, disassociate_datasenders, associate_datasenders, create_multiple_web_users, edit_subject_questionnaire, save_questionnaire, edit_data_sender, edit_subject
+from datawinners.entity.views import create_data_sender, disassociate_datasenders, associate_datasenders, create_multiple_web_users, edit_subject_questionnaire, save_questionnaire, edit_data_sender, edit_subject, register_student_subject
 from datawinners.entity.views import create_subject
 from datawinners.entity.views import create_type
 from datawinners.entity.views import submit

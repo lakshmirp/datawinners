@@ -2,6 +2,7 @@ from unittest.case import SkipTest
 from django.test import TestCase
 from django.test import Client
 import json
+from datawinners.entity.views import register_student_subject
 
 class TestEntityLoggedIn(TestCase):
 

@@ -13,6 +13,8 @@ from django.views.decorators.csrf import csrf_view_exempt, csrf_response_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import ugettext as _, activate, get_language
 from accountmanagement.views import session_not_expired
+from mangrove.datastore.datadict import get_datadict_type_by_slug, create_datadict_type
+from mangrove.transport.reporter import REPORTER_ENTITY_TYPE
 from datawinners import utils
 from datawinners.project.view_models import ReporterEntity
 from mangrove.form_model.field import field_to_json
@@ -34,11 +36,10 @@ from datawinners.project.models import Project, get_all_projects
 from mangrove.datastore.entity_type import  define_type
 from mangrove.errors.MangroveException import EntityTypeAlreadyDefined, MangroveException, DataObjectAlreadyExists, QuestionCodeAlreadyExistsException, EntityQuestionAlreadyExistsException, DataObjectNotFound, QuestionAlreadyExistsException
 from datawinners.entity.forms import EntityTypeForm, ReporterRegistrationForm
-from mangrove.form_model.form_model import LOCATION_TYPE_FIELD_NAME, REGISTRATION_FORM_CODE, LOCATION_TYPE_FIELD_CODE, REPORTER, get_form_model_by_entity_type, get_form_model_by_code, GEO_CODE_FIELD_NAME, NAME_FIELD, SHORT_CODE_FIELD
+from mangrove.form_model.form_model import LOCATION_TYPE_FIELD_NAME, REGISTRATION_FORM_CODE, LOCATION_TYPE_FIELD_CODE, REPORTER, get_form_model_by_entity_type, get_form_model_by_code, GEO_CODE_FIELD_NAME, NAME_FIELD, SHORT_CODE_FIELD, MOBILE_NUMBER_FIELD
 from mangrove.transport.player.player import WebPlayer
 from mangrove.transport import Request, TransportInfo
 from datawinners.entity import import_data as import_module
-from mangrove.utils.entity_builder import EntityBuilder
 from mangrove.utils.types import is_empty
 from datawinners.project.web_questionnaire_form_creator import WebQuestionnaireFormCreator
 from datawinners.submission.location import LocationBridge
@@ -56,7 +57,7 @@ from datawinners.common.constant import REGISTERED_DATA_SENDER, EDITED_DATA_SEND
     ADDED_DATA_SENDERS_TO_PROJECTS, REGISTERED_SUBJECT, EDITED_REGISTRATION_FORM
 from datawinners.entity.helper import send_email_to_data_sender
 import logging
-from datawinners.tests.test_data_utils import define_entity_instance
+from datawinners.tests.test_data_utils import define_entity_instance, register
 
 websubmission_logger = logging.getLogger("websubmission")
 
@@ -244,6 +245,23 @@ def register_student_subject(manager, location, short_code, geometry, lastname=N
         description, firstname)
     student_subject.save()
 
+def create_data_sender_for_student_type(manager,phone_number,name,location,short_code,coordinates):
+    phone_number_type = create_data_dict(manager, name='Telephone Number', slug='telephone_number',
+        primitive_type='string')
+    first_name_type = create_data_dict(manager, name='First Name', slug='first_name', primitive_type='string')
+    register(manager, entity_type=REPORTER_ENTITY_TYPE, data=[(MOBILE_NUMBER_FIELD, phone_number, phone_number_type),
+                                                              (NAME_FIELD, name, first_name_type)],
+        location=location,
+        short_code=short_code, geometry={"type": "Point", "coordinates": coordinates})
+
+
+def create_data_dict(dbm, name, slug, primitive_type, description=None):
+    try:
+        existing = get_datadict_type_by_slug(dbm, slug)
+        existing.delete()
+    except DataObjectNotFound:
+        pass
+    return create_datadict_type(dbm, name, slug, primitive_type, description)
 
 @csrf_view_exempt
 @csrf_response_exempt
