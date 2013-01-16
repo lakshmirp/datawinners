@@ -7,7 +7,7 @@ from mangrove.bootstrap import initializer
 from mangrove.datastore.documents import DataRecordDocument
 from mangrove.form_model.form_model import  get_form_model_by_code
 from mangrove.transport import TransportInfo, Request
-from mangrove.transport.player.player import WebPlayer, SMSPlayer
+from mangrove.transport.player.player import WebPlayer, SMSPlayer, XFormPlayer
 from mangrove.utils.test_utils.mangrove_test_case import MangroveTestCase
 from messageprovider.messages import SMS
 from project.views import create_student_project
@@ -102,6 +102,30 @@ class TestStudentType(MangroveTestCase):
         data = data_record.data
         self.assertEquals('BHARGHAV', data['What is student\'s name?']['value'])
         date_given = datetime(2013, 10, 1, 0, 0, tzinfo=UTC)
+        self.assertEquals(date_given, data['What is reporting period?']['value'])
+        self.assertEquals(['Male'], data['What is your Gender?']['value'])
+        self.assertEquals([17.5632,34.5687], data['What is the GPS code for your house']['value'])
+
+    def test_should_submit_answers_via_xforms(self):
+        create_student_project(self.manager)
+        self.xform_player = XFormPlayer(self.manager)
+        transport_info = TransportInfo(transport="xforms", source="tester150411@gmail.com", destination="")
+        message = "<data>" \
+                  "<form_code>stu001</form_code>" \
+                  "<EID>stu</EID>" \
+                  "<STN>Pooja</STN>" \
+                  "<RPP>2013-06-22</RPP>"\
+                  "<GND>a</GND>" \
+                  "<GPS>17.5632 34.5687</GPS>" \
+                  "</data>"
+        request = Request(message=message, transportInfo=transport_info)
+        response = self.xform_player.accept(request)
+        self.assertTrue(response.success)
+        data_record_id = response.datarecord_id
+        data_record = self.manager._load_document(id=data_record_id, document_class=DataRecordDocument)
+        data = data_record.data
+        self.assertEquals('Pooja', data['What is student\'s name?']['value'])
+        date_given = datetime(2013, 6, 1, 0, 0, tzinfo=UTC)
         self.assertEquals(date_given, data['What is reporting period?']['value'])
         self.assertEquals(['Male'], data['What is your Gender?']['value'])
         self.assertEquals([17.5632,34.5687], data['What is the GPS code for your house']['value'])
