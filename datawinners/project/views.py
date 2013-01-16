@@ -17,7 +17,8 @@ from django.core.urlresolvers import reverse
 from django.contrib import messages
 from accountmanagement.views import  session_not_expired
 from datawinners.project.view_models import ReporterEntity
-from mangrove.datastore.entity import get_by_short_code
+from mangrove.datastore.datadict import DataDictType
+from mangrove.datastore.entity import get_by_short_code, create_entity
 from datawinners.alldata.helper import get_visibility_settings_for
 from datawinners.custom_report_router.report_router import ReportRouter
 from datawinners.entity.helper import process_create_data_sender_form, add_imported_data_sender_to_trial_organization, _get_data, update_data_sender_from_trial_organization
@@ -26,11 +27,13 @@ from datawinners.submission.location import LocationBridge
 from datawinners.utils import get_organization
 import helper
 from data_sender_helper import DataSenderHelper
+from mangrove.datastore.entity_type import define_type
 from mangrove.datastore.queries import get_entity_count_for_type, get_non_voided_entity_count_for_type
 from mangrove.errors.MangroveException import QuestionCodeAlreadyExistsException, EntityQuestionAlreadyExistsException, DataObjectAlreadyExists, DataObjectNotFound, QuestionAlreadyExistsException, MangroveException
 from mangrove.form_model import form_model
-from mangrove.form_model.field import field_to_json
+from mangrove.form_model.field import field_to_json, TextField, DateField, SelectField, GeoCodeField
 from mangrove.form_model.form_model import get_form_model_by_code, FormModel, REGISTRATION_FORM_CODE, get_form_model_by_entity_type, REPORTER
+from mangrove.form_model.validation import TextLengthConstraint
 from mangrove.transport.facade import TransportInfo, Request
 from mangrove.transport.player.player import WebPlayer
 from mangrove.transport.submissions import Submission, get_submissions, submission_count
@@ -51,7 +54,7 @@ from datawinners.project.forms import BroadcastMessageForm
 from datawinners.project.models import Project, ProjectState, Reminder, ReminderMode, get_all_reminder_logs_for_project, get_all_projects
 from datawinners.accountmanagement.models import Organization, OrganizationSetting, NGOUserProfile
 from datawinners.entity.forms import ReporterRegistrationForm
-from datawinners.entity.views import import_subjects_from_project_wizard, all_datasenders, save_questionnaire as subject_save_questionnaire, create_single_web_user
+from datawinners.entity.views import import_subjects_from_project_wizard, all_datasenders, save_questionnaire as subject_save_questionnaire, create_single_web_user, create_data_dict
 from datawinners.project.wizard_view import edit_project, reminder_settings, reminders
 from datawinners.location.LocationTree import get_location_hierarchy
 from datawinners.project import models
@@ -1337,3 +1340,43 @@ def project_has_data(request, questionnaire_code=None):
     raw_field_values = analyzer.get_raw_values()
 
     return HttpResponse(encode_json({'has_data': len(raw_field_values) != 0}))
+
+def create_student_project(manager):
+    STUDENT_ENTITY_TYPE = [u'student']
+    define_type(manager, STUDENT_ENTITY_TYPE)
+    create_entity(manager, entity_type=STUDENT_ENTITY_TYPE,
+        location=["India", "Pune"], aggregation_paths=None, short_code="stu",
+    )
+    name_type = create_data_dict(manager, name='Name', slug='Name', primitive_type='string')
+    date_type = create_data_dict(manager, name='Report Date', slug='date', primitive_type='date')
+    select_type = create_data_dict(manager, name='Choice Type', slug='choice', primitive_type='select')
+    geo_code_type = create_data_dict(manager, name='GeoCode Type', slug='geo_code', primitive_type='geocode')
+    entity_id_type = DataDictType(manager, name='Entity Id Type', slug='entity_id', primitive_type='string')
+
+    question1 = TextField(name="entity_question", code="EID", label="What is associated entity",
+        entity_question_flag=True, ddtype=entity_id_type)
+    question2 = TextField(label="Student_name", code="STN", name="What is student's name?",
+        ddtype=name_type,
+        constraints=[TextLengthConstraint(min=1, max=12)],
+        instruction="Answer must be a word or phrase 12 characters maximum")
+    question3 = DateField(label="Reporting period", code="RPP", name="What is reporting period?",
+                          date_format="mm.yyyy", ddtype=date_type,
+                          instruction="Answer must be a date in the following format: month.year. Example: 12.2011")
+    question4 = SelectField(label="Gender", code="GND", name="What is your Gender?",
+        options=[("Male","a"),("Female","b")], single_select_flag=True,
+        ddtype=select_type)
+    question5 = GeoCodeField(name="What is the GPS code for your house", code="GPS",
+        label="What is the GPS code for your house?",
+        ddtype=geo_code_type,
+        instruction="Answer must be GPS co-ordinates in the following format: xx.xxxx,yy.yyyy Example: -18.1324,27.6547")
+
+    form_model = FormModel(manager, name="STUDENT", label="Student form_model",
+        form_code="stu001", fields=[question1,question2,question3,question4,question5], entity_type=STUDENT_ENTITY_TYPE
+    )
+    student_question_form = form_model.save()
+    project_student = Project(name="Student Test Project", goals="This project is for automation", project_type="survey",
+        entity_type="student", devices=["sms", "web", "smartPhone"])
+    project_student.qid = student_question_form
+    project_student.state = ProjectState.ACTIVE
+    project_student.save(manager)
+
